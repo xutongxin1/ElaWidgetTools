@@ -52,6 +52,7 @@ public:
     ElaAppBarType::ButtonFlags getWindowButtonFlags() const;
 
     void closeWindow();
+    void hideAppBar();
 Q_SIGNALS:
     Q_SIGNAL void userInfoCardClicked();
     Q_SIGNAL void closeButtonClicked();
@@ -61,6 +62,7 @@ Q_SIGNALS:
 protected:
     virtual bool eventFilter(QObject* watched, QEvent* event) override;
     virtual QMenu* createPopupMenu() override;
+
 };
 
 #endif // ELAWINDOW_H

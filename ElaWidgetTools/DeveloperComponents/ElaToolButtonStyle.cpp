@@ -219,7 +219,10 @@ void ElaToolButtonStyle::_drawIcon(QPainter* painter, QRectF iconRect, const QSt
         {
             // 绘制ElaIcon
             painter->save();
-            if (bopt->state.testFlag(QStyle::State_Enabled))
+            if (ForceIconColor!=QColor(0,0,0,0)) {
+                painter->setPen(ForceIconColor);
+            }
+            else if (bopt->state.testFlag(QStyle::State_Enabled))
             {
                 painter->setPen(ElaThemeColor(_themeMode, BasicText));
             }

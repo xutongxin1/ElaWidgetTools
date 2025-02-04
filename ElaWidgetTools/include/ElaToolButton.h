@@ -22,6 +22,7 @@ public:
 
     void setMenu(ElaMenu* menu);
     void setElaIcon(ElaIconType::IconName icon);
+    void setForceIconColor(QColor color);
 
 protected:
     virtual bool eventFilter(QObject* watched, QEvent* event) override;

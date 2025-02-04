@@ -80,7 +80,12 @@ void ElaToolButton::setElaIcon(ElaIconType::IconName icon)
     setProperty("ElaIconType", QChar((unsigned short)icon));
     setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::Broom, 1));
 }
-
+void ElaToolButton::setForceIconColor(const QColor color)
+{
+    Q_D(ElaToolButton);
+    d->_toolButtonStyle->ForceIconColor=color;
+    update();
+}
 bool ElaToolButton::eventFilter(QObject* watched, QEvent* event)
 {
     Q_D(ElaToolButton);

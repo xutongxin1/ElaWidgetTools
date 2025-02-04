@@ -57,9 +57,9 @@ void ElaTabWidget::dropEvent(QDropEvent* event)
     Q_D(ElaTabWidget);
     if (event->mimeData()->property("ElaTabWidgetObject").value<ElaTabWidget*>() != this)
     {
-        QMimeData* data = const_cast<QMimeData*>(event->mimeData());
-        data->setProperty("TabDropIndex", count());
-        d->onTabDragDrop(event->mimeData());
+        // QMimeData* data = const_cast<QMimeData*>(event->mimeData());
+        // data->setProperty("TabDropIndex", count());
+        // d->onTabDragDrop(event->mimeData());
         event->accept();
     }
     QTabWidget::dropEvent(event);

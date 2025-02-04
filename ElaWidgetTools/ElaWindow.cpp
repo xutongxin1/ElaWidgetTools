@@ -393,3 +393,9 @@ QMenu* ElaWindow::createPopupMenu()
     }
     return menu;
 }
+
+void ElaWindow::hideAppBar()
+{
+    Q_D(ElaWindow);
+    d->_appBar->setAppBarHeight(0);
+}
