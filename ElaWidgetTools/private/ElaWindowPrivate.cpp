@@ -1,12 +1,5 @@
 #include "ElaWindowPrivate.h"
 
-#include <QApplication>
-#include <QPropertyAnimation>
-#include <QTimer>
-#include <QVBoxLayout>
-#include <QtMath>
-
-#include "ElaAppBar.h"
 #include "ElaAppBarPrivate.h"
 #include "ElaApplication.h"
 #include "ElaCentralStackedWidget.h"
@@ -14,6 +7,11 @@
 #include "ElaTheme.h"
 #include "ElaThemeAnimationWidget.h"
 #include "ElaWindow.h"
+#include <QApplication>
+#include <QPropertyAnimation>
+#include <QTimer>
+#include <QVBoxLayout>
+#include <QtMath>
 ElaWindowPrivate::ElaWindowPrivate(QObject* parent)
     : QObject{parent}
 {
@@ -61,14 +59,12 @@ void ElaWindowPrivate::onWMWindowClickedEvent(QVariantMap data)
             connect(navigationMoveAnimation, &QPropertyAnimation::valueChanged, this, [=]() {
                 if (_isNavigationDisplayModeChanged)
                 {
-                    _navigationBar->setIsTransparent(true);
                     _isWMClickedAnimationFinished = true;
                     _resetWindowLayout(false);
                     navigationMoveAnimation->deleteLater();
                 }
             });
             connect(navigationMoveAnimation, &QPropertyAnimation::finished, this, [=]() {
-                _navigationBar->setIsTransparent(true);
                 if (!_isNavigationDisplayModeChanged)
                 {
                     _navigationBar->setDisplayMode(ElaNavigationType::Minimal, false);
@@ -170,12 +166,13 @@ void ElaWindowPrivate::onThemeModeChanged(ElaThemeType::ThemeMode themeMode)
 
 void ElaWindowPrivate::onNavigationNodeClicked(ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
 {
-    int nodeIndex = _routeMap.value(nodeKey);
-    if (nodeIndex == -1)
+    QWidget* page = _routeMap.value(nodeKey);
+    if (!page)
     {
         // 页脚没有绑定页面
         return;
     }
+    int nodeIndex = _centerStackedWidget->indexOf(page);
     if (_navigationTargetIndex == nodeIndex || _centerStackedWidget->count() <= nodeIndex)
     {
         return;
@@ -199,20 +196,33 @@ void ElaWindowPrivate::onNavigationNodeAdded(ElaNavigationType::NavigationNodeTy
 {
     if (nodeType == ElaNavigationType::PageNode)
     {
-        _routeMap.insert(nodeKey, _centerStackedWidget->count());
+        _routeMap.insert(nodeKey, page);
         _centerStackedWidget->addWidget(page);
     }
     else
     {
+        _routeMap.insert(nodeKey, page);
         if (page)
         {
-            _routeMap.insert(nodeKey, _centerStackedWidget->count());
             _centerStackedWidget->addWidget(page);
         }
-        else
-        {
-            _routeMap.insert(nodeKey, -1);
-        }
+    }
+}
+
+void ElaWindowPrivate::onNavigationNodeRemoved(ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
+{
+    Q_Q(ElaWindow);
+    if (!_routeMap.contains(nodeKey))
+    {
+        return;
+    }
+    QWidget* page = _routeMap.value(nodeKey);
+    _routeMap.remove(nodeKey);
+    _centerStackedWidget->removeWidget(page);
+    QWidget* currentWidget = _centerStackedWidget->currentWidget();
+    if (currentWidget)
+    {
+        q->navigation(currentWidget->property("ElaPageKey").toString());
     }
 }
 
@@ -234,6 +244,7 @@ void ElaWindowPrivate::_resetWindowLayout(bool isAnimation)
     {
         if (_centerLayout->count() == 0)
         {
+            _navigationBar->setIsTransparent(true);
             _navigationBar->setDisplayMode(ElaNavigationType::Minimal, false);
             _centerLayout->addWidget(_navigationBar);
             _centerLayout->addWidget(_centerStackedWidget);
