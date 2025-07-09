@@ -4,7 +4,6 @@
 #include <QObject>
 
 #include "Def.h"
-#include "stdafx.h"
 class ElaEvent;
 class ElaLineEdit;
 class ElaLineEditPrivate : public QObject
@@ -16,7 +15,7 @@ class ElaLineEditPrivate : public QObject
     Q_PROPERTY_CREATE(qreal, ExpandMarkWidth)
 public:
     explicit ElaLineEditPrivate(QObject* parent = nullptr);
-    ~ElaLineEditPrivate();
+    ~ElaLineEditPrivate() override;
     Q_INVOKABLE void onWMWindowClickedEvent(QVariantMap data);
     Q_SLOT void onThemeChanged(ElaThemeType::ThemeMode themeMode);
 
@@ -24,6 +23,7 @@ private:
     ElaThemeType::ThemeMode _themeMode;
     ElaEvent* _focusEvent{nullptr};
     qreal _textSpacing{0.5};
+    void _changeTheme();
 };
 
 #endif // ELALINEEDITPRIVATE_H
