@@ -117,7 +117,6 @@ void ElaPromotionView::appendPromotionCard(ElaPromotionCard *card) {
     card->setParent(this);
     d->_promotionCardList.append(card);
     card->show();
-    disconnect(card, &ElaPromotionCard::promotionCardClicked, this, nullptr); //断开现有连接
     connect(card, &ElaPromotionCard::promotionCardClicked, this, [=]() {
         d->onPromotionCardClicked(card);
     });
