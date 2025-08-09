@@ -42,6 +42,7 @@ ElaAppBar::ElaAppBar(QWidget* parent)
     d->_pIsFixedSize = false;
     d->_pIsDefaultClosed = true;
     d->_pIsOnlyAllowMinAndClose = false;
+    d->_pCustomMenu = nullptr;
     d->_pCustomWidget = nullptr;
     d->_pCustomWidgetMaximumWidth = 550;
     window()->installEventFilter(this);
@@ -244,6 +245,19 @@ QWidget* ElaAppBar::getCustomWidget() const
     return d->_pCustomWidget;
 }
 
+void ElaAppBar::setCustomMenu(QMenu* customMenu)
+{
+    Q_D(ElaAppBar);
+    d->_pCustomMenu = customMenu;
+    Q_EMIT customMenuChanged();
+}
+
+QMenu* ElaAppBar::getCustomMenu() const
+{
+    Q_D(const ElaAppBar);
+    return d->_pCustomMenu;
+}
+
 void ElaAppBar::setCustomWidgetMaximumWidth(int width)
 {
     Q_D(ElaAppBar);
@@ -379,11 +393,6 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
     {
         return 0;
     }
-    if (d->_currentWinID == 0)
-    {
-        ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-        ::RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
-    }
     d->_currentWinID = (qint64)hwnd;
     const UINT uMsg = msg->message;
     const WPARAM wParam = msg->wParam;
@@ -447,19 +456,16 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
             return 0;
         }
         RECT* clientRect = &((NCCALCSIZE_PARAMS*)(lParam))->rgrc[0];
-        if (!::IsZoomed(hwnd))
+        const LONG originTop = clientRect->top;
+        const LRESULT hitTestResult = ::DefWindowProcW(hwnd, WM_NCCALCSIZE, wParam, lParam);
+        if ((hitTestResult != HTERROR) && (hitTestResult != HTNOWHERE))
         {
-            clientRect->top -= 1;
-            clientRect->bottom -= 1;
+            *result = static_cast<long>(hitTestResult);
+            return 1;
         }
-        else
+        clientRect->top = originTop;
+        if (::IsZoomed(hwnd))
         {
-            const LRESULT hitTestResult = ::DefWindowProcW(hwnd, WM_NCCALCSIZE, wParam, lParam);
-            if ((hitTestResult != HTERROR) && (hitTestResult != HTNOWHERE))
-            {
-                *result = static_cast<long>(hitTestResult);
-                return 1;
-            }
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
             auto geometry = window()->screen()->geometry();
 #else
@@ -642,7 +648,7 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
     {
         if (wParam == HTCAPTION && !d->_pIsOnlyAllowMinAndClose)
         {
-            d->_showSystemMenu(QCursor::pos());
+            d->_showAppBarMenu(QCursor::pos());
         }
         break;
     }
@@ -652,7 +658,7 @@ int ElaAppBar::takeOverNativeEvent(const QByteArray& eventType, void* message, l
         if ((GetAsyncKeyState(VK_MENU) & 0x8000) && (GetAsyncKeyState(VK_SPACE) & 0x8000) && !d->_pIsOnlyAllowMinAndClose)
         {
             auto pos = window()->geometry().topLeft();
-            d->_showSystemMenu(QPoint(pos.x(), pos.y() + this->height()));
+            d->_showAppBarMenu(QPoint(pos.x(), pos.y() + this->height()));
         }
         break;
     }
